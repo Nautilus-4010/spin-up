@@ -7,10 +7,13 @@ left_wheel = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
 right_wheel = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
 back_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
 intake = Motor(Ports.PORT11, GearSetting.RATIO_18_1, True)
-above_wheel = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
-
+above_wheel = Motor(Ports.PORT13, GearSetting.RATIO_18_1, True)
+Catapulta= Motor(Ports.PORT8, GearSetting.RATIO_18_1,True)
+Loop= 1
 INTAKE_VELOCITY = 100
 TURN_SENSIBILITY = 0.6
+OUTTAKE_VELOCITY = 40
+
 while True:
     drive = controller.axis3.position()
     turn = controller.axis1.position() * TURN_SENSIBILITY
@@ -35,3 +38,10 @@ while True:
         above_wheel.spin(REVERSE, INTAKE_VELOCITY, PERCENT)
     else:
         above_wheel.set_velocity(0, PERCENT)
+
+    if controller.buttonY.pressing(): 
+        Catapulta.spin(FORWARD, OUTTAKE_VELOCITY, PERCENT)
+    elif controller.buttonA.pressing():
+        Catapulta.spin(REVERSE, OUTTAKE_VELOCITY, PERCENT)
+    else:
+        Catapulta.set_velocity(0, PERCENT)
