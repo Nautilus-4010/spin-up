@@ -1,14 +1,16 @@
+import time
 from vex import *
 
 INTAKE_VELOCITY = 100
-TURN_SENSIBILITY = 0.6
+TURN_SENSIBILITY = 0.5
+LATERAL_SENSIBILITY = 0.6
 CATAPULT_POWER = 80
 
 brain = Brain()
 controller = Controller()
 left_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, False)
 right_wheel = Motor(Ports.PORT7, GearSetting.RATIO_18_1, True)
-back_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
+back_wheel = Motor(Ports.PORT19, GearSetting.RATIO_18_1, True)
 intake = Motor(Ports.PORT9, GearSetting.RATIO_18_1, True)
 roller = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 catapult = Motor(Ports.PORT6, GearSetting.RATIO_18_1,True)
@@ -36,10 +38,22 @@ def user_control():
     while True:    
         drive = joystick_smoother(controller.axis3.position())
         turn = joystick_smoother(controller.axis1.position()) * TURN_SENSIBILITY
-        lateral = joystick_smoother(controller.axis4.position())
+        lateral = joystick_smoother(controller.axis4.position()) * LATERAL_SENSIBILITY
         left_wheel_power = drive + turn
         right_wheel_power = drive - turn
         back_wheel_power = lateral
+        max_velocity = max(abs(back_wheel_power), max(abs(left_wheel_power), abs(right_wheel_power)))
+        power_multiplier = 0.75
+        if max_velocity > 1:
+            left_wheel_power /= max_velocity
+            right_wheel_power /= max_velocity
+            back_wheel_power /= max_velocity
+        if controller.buttonR2.pressing() and controller.buttonL2.pressing():
+            power_multiplier = 1
+        
+        back_wheel_power *= 100 * power_multiplier
+        left_wheel_power *= 100 * power_multiplier
+        right_wheel_power *= 100 * power_multiplier
         back_wheel.spin(FORWARD, back_wheel_power, PERCENT)
         left_wheel.spin(FORWARD, left_wheel_power, PERCENT)
         right_wheel.spin(FORWARD, right_wheel_power, PERCENT)
@@ -54,9 +68,10 @@ def user_control():
 
         l1_was_clicked = controller.buttonL1.pressing()
         r1_was_clicked = controller.buttonR1.pressing()
+        time.sleep(0.1)
 
 def joystick_smoother(joystick_axis: float):
-    return 1.2 * math.tan(0.7 * joystick_axis)
+    return 1.2 * math.tan(0.7 * joystick_axis / 100)
 
 def control_intake(direction: int):
     current_direction = intake.velocity(PERCENT) // INTAKE_VELOCITY
