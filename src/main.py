@@ -14,7 +14,7 @@ back_wheel = Motor(Ports.PORT19, GearSetting.RATIO_18_1, True)
 intake = Motor(Ports.PORT9, GearSetting.RATIO_18_1, True)
 roller = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 catapult = Motor(Ports.PORT6, GearSetting.RATIO_18_1,True)
-#catapult_stopper = Bumper(Triport.a, brain = brain)
+catapult_stop = Bumper(brain.three_wire_port.a)
 
 def pre_autonomous():
     brain.screen.clear_screen()
@@ -29,9 +29,12 @@ def autonomous():
     right_wheel.spin_to_position(100, rotationUnits=RotationUnits.DEG, velocity=None, velocityUnits=VelocityUnits.PCT, waitForCompletion=True)
     wait(1, SECONDS)"""
 
+should_lower_catapult = False
 l1_was_clicked = False
 r1_was_clicked = False
+a_was_clicked = False
 def user_control():
+    global should_lower_catapult
     global l1_was_clicked
     global r1_was_clicked
     brain.screen.clear_screen()
@@ -63,10 +66,15 @@ def user_control():
         if r1_was_clicked and not controller.buttonR1.pressing():
             control_intake(-1)
 
-        if controller.buttonY.pressing():
-            pass
-            #catapult.spin(FORWARD, CATAPULT_POWER, PERCENT)
+        if a_was_clicked and not controller.buttonA.pressing():
+            should_lower_catapult = True
+        if controller.buttonX.pressing():
+            catapult.velocity(CATAPULT_POWER, PERCENT)
+        else:
+            catapult.velocity(0)
+        catapult.spin(FORWARD)
 
+        catapult_control()
         l1_was_clicked = controller.buttonL1.pressing()
         r1_was_clicked = controller.buttonR1.pressing()
         time.sleep(0.1)
@@ -76,21 +84,22 @@ def joystick_smoother(joystick_axis: float):
 
 def control_intake(direction: int):
     current_direction = intake.velocity(PERCENT)
-    print("curr", current_direction)
     if current_direction != 0:
         intake.set_velocity(0)
     elif direction > 0:
         intake.set_velocity(INTAKE_VELOCITY)
     else:
         intake.set_velocity(-INTAKE_VELOCITY)
-    print(intake.velocity(PERCENT))
     intake.spin(FORWARD)
 
-def catapult_stop(bumper_act):
-    """if catapult_stopper == 1:
-        catapult.set_velocity(0, PERCENT)
+def catapult_control():
+    global should_lower_catapult
+    should_stop_catapult = catapult_stop.pressing()
+    if should_stop_catapult:
+        print(50)
     else:
-        pass"""
+        print(0)
+    should_lower_catapult = False
 
 comp = Competition(user_control, autonomous)
 pre_autonomous()
