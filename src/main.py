@@ -1,36 +1,31 @@
 from vex import *
 
+INTAKE_VELOCITY = 100
+TURN_SENSIBILITY = 0.6
+CATAPULT_POWER = 80
+
 brain = Brain()
 controller = Controller()
 left_wheel = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
 right_wheel = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
 back_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
 intake = Motor(Ports.PORT11, GearSetting.RATIO_18_1, True)
-above_wheel = Motor(Ports.PORT13, GearSetting.RATIO_18_1, True)
-Catapulta= Motor(Ports.PORT8, GearSetting.RATIO_18_1,True)
-stop_Catapult = Triport(TriportPORT.a, brain = None)
-Loop= 1
-INTAKE_VELOCITY = 100
-TURN_SENSIBILITY = 0.6
-OUTTAKE_VELOCITY = 40
+roller = Motor(Ports.PORT13, GearSetting.RATIO_18_1, True)
+catapult= Motor(Ports.PORT8, GearSetting.RATIO_18_1,True)
+
 
 def pre_autonomous():
-    # actions to do when the program starts
     brain.screen.clear_screen()
     brain.screen.print("pre auton code")
     wait(1, SECONDS)
 
-
 def autonomous():
-    brain.screen.clear_screen()
+    """brain.screen.clear_screen()
     brain.screen.print("autonomous code")
     # place automonous code here
     left_wheel.spin_to_position(100, rotationUnits=RotationUnits.DEG, velocity=None, velocityUnits=VelocityUnits.PCT, waitForCompletion=True)
     right_wheel.spin_to_position(100, rotationUnits=RotationUnits.DEG, velocity=None, velocityUnits=VelocityUnits.PCT, waitForCompletion=True)
-    wait(1, SECONDS)
-
-
-
+    wait(1, SECONDS)"""
 
 def user_control():
     brain.screen.clear_screen()
@@ -52,31 +47,12 @@ def user_control():
         else:
             intake.set_velocity(0, PERCENT)
 
-        if controller.buttonL1.pressing():
-            above_wheel.spin(FORWARD, INTAKE_VELOCITY, PERCENT)
-        elif controller.buttonR1.pressing():
-            above_wheel.spin(REVERSE, INTAKE_VELOCITY, PERCENT)
-        else:
-            above_wheel.set_velocity(0, PERCENT)
-
         if controller.buttonY.pressing(): 
-            Catapulta.spin(FORWARD, OUTTAKE_VELOCITY, PERCENT)
-        elif controller.buttonA.pressing():
-            Catapulta.spin(REVERSE, OUTTAKE_VELOCITY, PERCENT)
-        else:
-            Catapulta.set_velocity(0, PERCENT)
-            wait(20, MSEC)
-
+            catapult.spin(FORWARD, CATAPULT_POWER, PERCENT)
 
 def joystick_smoother(joystick_axis: float):
     return 1.2 * math.tan(0.7 * joystick_axis)
 
-    # create competition instance
+
 comp = Competition(user_control, autonomous)
 pre_autonomous()
-
-def catapulta_wheel(catapult_port: float):
-    if stop_Catapult != 1:
-        Catapulta.stop(brakeType=None)
-        wait(20, MSEC)
-    else:
