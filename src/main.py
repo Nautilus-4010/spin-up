@@ -6,13 +6,13 @@ CATAPULT_POWER = 80
 
 brain = Brain()
 controller = Controller()
-left_wheel = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
-right_wheel = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
+left_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, False)
+right_wheel = Motor(Ports.PORT7, GearSetting.RATIO_18_1, True)
 back_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
-intake = Motor(Ports.PORT11, GearSetting.RATIO_18_1, True)
-roller = Motor(Ports.PORT13, GearSetting.RATIO_18_1, True)
-catapult= Motor(Ports.PORT8, GearSetting.RATIO_18_1,True)
-
+intake = Motor(Ports.PORT9, GearSetting.RATIO_18_1, True)
+roller = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
+catapult = Motor(Ports.PORT6, GearSetting.RATIO_18_1,True)
+#catapult_stopper = Bumper(Triport.a, brain = brain)
 
 def pre_autonomous():
     brain.screen.clear_screen()
@@ -27,7 +27,11 @@ def autonomous():
     right_wheel.spin_to_position(100, rotationUnits=RotationUnits.DEG, velocity=None, velocityUnits=VelocityUnits.PCT, waitForCompletion=True)
     wait(1, SECONDS)"""
 
+l1_was_clicked = False
+r1_was_clicked = False
 def user_control():
+    global l1_was_clicked
+    global r1_was_clicked
     brain.screen.clear_screen()
     while True:    
         drive = joystick_smoother(controller.axis3.position())
@@ -40,19 +44,34 @@ def user_control():
         left_wheel.spin(FORWARD, left_wheel_power, PERCENT)
         right_wheel.spin(FORWARD, right_wheel_power, PERCENT)
 
-        if controller.buttonL2.pressing():
-            intake.spin(FORWARD, INTAKE_VELOCITY, PERCENT)
-        elif controller.buttonR2.pressing():
-            intake.spin(REVERSE, INTAKE_VELOCITY, PERCENT)
-        else:
-            intake.set_velocity(0, PERCENT)
+        if l1_was_clicked and not controller.buttonL1.pressing():
+            control_intake(1)
+        if r1_was_clicked and not controller.buttonR1.pressing():
+            control_intake(-1)
 
         if controller.buttonY.pressing(): 
             catapult.spin(FORWARD, CATAPULT_POWER, PERCENT)
 
+        l1_was_clicked = controller.buttonL1.pressing()
+        r1_was_clicked = controller.buttonR1.pressing()
+
 def joystick_smoother(joystick_axis: float):
     return 1.2 * math.tan(0.7 * joystick_axis)
 
+def control_intake(direction: int):
+    current_direction = intake.velocity(PERCENT) // INTAKE_VELOCITY
+    if current_direction != 0:
+        intake.set_velocity(0)
+    elif direction > 0:
+        intake.set_velocity(INTAKE_VELOCITY)
+    else:
+        intake.set_velocity(-INTAKE_VELOCITY)
+
+def catapult_stop(bumper_act):
+    """if catapult_stopper == 1:
+        catapult.set_velocity(0, PERCENT)
+    else:
+        pass"""
 
 comp = Competition(user_control, autonomous)
 pre_autonomous()
