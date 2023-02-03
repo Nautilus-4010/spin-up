@@ -63,8 +63,9 @@ def user_control():
         if r1_was_clicked and not controller.buttonR1.pressing():
             control_intake(-1)
 
-        if controller.buttonY.pressing(): 
-            catapult.spin(FORWARD, CATAPULT_POWER, PERCENT)
+        if controller.buttonY.pressing():
+            pass
+            #catapult.spin(FORWARD, CATAPULT_POWER, PERCENT)
 
         l1_was_clicked = controller.buttonL1.pressing()
         r1_was_clicked = controller.buttonR1.pressing()
@@ -74,13 +75,16 @@ def joystick_smoother(joystick_axis: float):
     return 1.2 * math.tan(0.7 * joystick_axis / 100)
 
 def control_intake(direction: int):
-    current_direction = intake.velocity(PERCENT) // INTAKE_VELOCITY
+    current_direction = intake.velocity(PERCENT)
+    print("curr", current_direction)
     if current_direction != 0:
         intake.set_velocity(0)
     elif direction > 0:
         intake.set_velocity(INTAKE_VELOCITY)
     else:
         intake.set_velocity(-INTAKE_VELOCITY)
+    print(intake.velocity(PERCENT))
+    intake.spin(FORWARD)
 
 def catapult_stop(bumper_act):
     """if catapult_stopper == 1:
