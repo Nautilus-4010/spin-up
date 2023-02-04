@@ -16,6 +16,7 @@ intake = Motor(Ports.PORT9, GearSetting.RATIO_18_1, True)
 roller = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 catapult = Motor(Ports.PORT6, GearSetting.RATIO_18_1,True)
 catapult_stop = Bumper(brain.three_wire_port.a)
+extension = Motor(Ports.PORT18, GearSetting.RATIO_18_1, True)
 
 def pre_autonomous():
     brain.screen.clear_screen()
@@ -83,6 +84,9 @@ def user_control():
             catapult.set_velocity(0)
         catapult.spin(FORWARD)
 
+        if controller.buttonLeft.pressing() and controller.buttonRight.pressing():
+            launch_extension()
+
         catapult_control()
         l1_was_clicked = controller.buttonL1.pressing()
         r1_was_clicked = controller.buttonR1.pressing()
@@ -98,6 +102,10 @@ def control_intake(direction: int):
         intake.spin(FORWARD, INTAKE_VELOCITY, PERCENT)
     else:
         intake.spin(REVERSE, INTAKE_VELOCITY, PERCENT)
+
+def launch_extension():
+    extension.reset_position()
+    extension.spin_to_position(10, DEGREES, 100)
 
 def catapult_control():
     global is_shooting
