@@ -9,9 +9,9 @@ CATAPULT_POWER = 80
 
 brain = Brain()
 controller = Controller()
-left_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, False)
-right_wheel = Motor(Ports.PORT7, GearSetting.RATIO_18_1, True)
-back_wheel = Motor(Ports.PORT19, GearSetting.RATIO_18_1, True)
+left_wheel = Motor(Ports.PORT7, GearSetting.RATIO_18_1, False)
+right_wheel = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
+back_wheel = Motor(Ports.PORT19, GearSetting.RATIO_18_1, False)
 intake = Motor(Ports.PORT9, GearSetting.RATIO_18_1, True)
 roller = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 catapult = Motor(Ports.PORT6, GearSetting.RATIO_18_1,True)
@@ -20,6 +20,9 @@ extension = Motor(Ports.PORT18, GearSetting.RATIO_18_1, True)
 
 def pre_autonomous():
     brain.screen.clear_screen()
+    extension.reset_position()
+    extension.spin_to_position(0)
+    extension.set_velocity(100, PERCENT)
     brain.screen.print("pre auton code")
     wait(1, SECONDS)
 
@@ -28,18 +31,29 @@ def autonomous():
     catapult.spin_to_position(360, DEGREES, INTAKE_VELOCITY)
     while catapult.is_spinning():
         time.sleep(0.1)
+    right_wheel.spin_to_position(15, DEGREES, 70)
+    left_wheel.spin_to_position(15, DEGREES, 70)
+    wait(1, SECONDS)
+#    back_wheel.spin_to_position()
+
+
 
 is_shooting = False
 l1_was_clicked = False
 r1_was_clicked = False
+launcher_click = False
 was_a_clicked = False
 def user_control():
+    global launcher_click
     global is_shooting
     global was_a_clicked
     global l1_was_clicked
     global r1_was_clicked
     brain.screen.clear_screen()
-    while True:    
+    extension.reset_position()
+    extension.spin_to_position(1, DEGREES)
+    extension.set_velocity(100, PERCENT)
+    while True:
         drive = joystick_smoother(controller.axis3.position())
         turn = joystick_smoother(controller.axis1.position()) * TURN_SENSIBILITY
         lateral = joystick_smoother(controller.axis4.position()) * LATERAL_SENSIBILITY
@@ -61,6 +75,11 @@ def user_control():
         back_wheel.spin(FORWARD, back_wheel_power, PERCENT)
         left_wheel.spin(FORWARD, left_wheel_power, PERCENT)
         right_wheel.spin(FORWARD, right_wheel_power, PERCENT)
+
+        if controller.buttonDown.pressing():
+            extension.spin(REVERSE, 100, PERCENT)
+        else:
+            extension.set_velocity(0)
 
         if controller.buttonY.pressing():
             roller.spin(FORWARD, 100, PERCENT)
@@ -85,7 +104,10 @@ def user_control():
         catapult.spin(FORWARD)
 
         if controller.buttonLeft.pressing() and controller.buttonRight.pressing():
+            launcher_click = True
+        elif launcher_click and not controller.buttonLeft.pressing() and not controller.buttonRight.pressing():
             launch_extension()
+            launcher_click = False
 
         catapult_control()
         l1_was_clicked = controller.buttonL1.pressing()
@@ -105,7 +127,7 @@ def control_intake(direction: int):
 
 def launch_extension():
     extension.reset_position()
-    extension.spin_to_position(10, DEGREES, 100)
+    extension.spin_to_position(90, DEGREES, 100, PERCENT)
 
 def catapult_control():
     global is_shooting
